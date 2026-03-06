@@ -23,7 +23,12 @@ class SeamlessAdapter(GameProviderAdapter):
         self.api_base_url = (api_base_url or os.environ.get("SEAMLESS_API_BASE_URL") or "https://svc-v1.lunexa.to").rstrip("/")
         self.agent_code = agent_code or os.environ.get("SEAMLESS_AGENT_CODE") or ""
         self.agent_token = agent_token or os.environ.get("SEAMLESS_AGENT_TOKEN") or ""
-        self.agent_secret = agent_secret or os.environ.get("SEAMLESS_AGENT_SECRET") or ""
+        self.agent_secret = (
+            agent_secret
+            or os.environ.get("SEAMLESS_AGENT_SECRET")
+            or os.environ.get("SEAMLESS_AGENT_SECRET_KEY")
+            or ""
+        )
         self.timeout_seconds = timeout_seconds
 
     @property

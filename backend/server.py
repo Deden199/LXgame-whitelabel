@@ -4016,8 +4016,8 @@ async def launch_game(game_id: str, request: Request):
         launch_preview = provider.launch_contract_preview(
             user_code=user["id"],
             user_balance=player.get("wallet_balance", 0),
-            provider_code=game.get("provider_code", ""),
-            game_code=game.get("game_code") or game.get("game_launch_id"),
+            provider_code=game.get("launch_provider_code") or game.get("provider_code", ""),
+            game_code=game.get("launch_game_code") or game.get("game_code") or game.get("game_launch_id"),
             category=game.get("category", "slots"),
             language=seamless_config.get("language", "en"),
         )
@@ -4029,12 +4029,12 @@ async def launch_game(game_id: str, request: Request):
         try:
             session_data = await provider.create_session(
                 player_id=user["id"],
-                game_id=game.get("game_code") or game.get("game_launch_id"),
+                game_id=game.get("launch_game_code") or game.get("game_code") or game.get("game_launch_id"),
                 tenant_id=user["tenant_id"],
                 currency=seamless_config.get("default_currency", await get_player_preferred_currency(user["id"])),
                 language=seamless_config.get("language", "en"),
                 user_balance=player.get("wallet_balance", 0),
-                provider_code=game.get("provider_code", ""),
+                provider_code=game.get("launch_provider_code") or game.get("provider_code", ""),
                 category=game.get("category", "slots"),
             )
         except Exception as exc:

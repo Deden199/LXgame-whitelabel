@@ -66,11 +66,18 @@ export function GameThumbnail({
   imageTestId,
   fallbackTestId,
 }) {
+  const primarySrc = getGameThumbnail(game);
+  const fallbackSrc = gameAssetUrl(game);
+  const [currentSrc, setCurrentSrc] = useState(primarySrc);
   const [imgError, setImgError] = useState(false);
-  const thumbnailUrl = getGameThumbnail(game);
   const providerLabel = game?.provider_name || game?.provider_code || 'Game';
 
-  if (!thumbnailUrl || imgError) {
+  React.useEffect(() => {
+    setCurrentSrc(primarySrc);
+    setImgError(false);
+  }, [primarySrc]);
+
+  if (!currentSrc || imgError) {
     return (
       <div
         className={cn('img-placeholder flex h-full w-full flex-col items-center justify-center gap-2 rounded-[inherit]', wrapperClassName)}
@@ -89,12 +96,18 @@ export function GameThumbnail({
 
   return (
     <img
-      src={thumbnailUrl}
+      src={currentSrc}
       alt={game?.name || 'Game thumbnail'}
       className={cn(className)}
       loading="lazy"
       decoding="async"
-      onError={() => setImgError(true)}
+      onError={() => {
+        if (currentSrc !== fallbackSrc) {
+          setCurrentSrc(fallbackSrc);
+          return;
+        }
+        setImgError(true);
+      }}
       data-testid={imageTestId}
     />
   );

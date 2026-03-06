@@ -34,6 +34,7 @@ def _seamless_config(agent_code: str, default_currency: str = "PHP") -> dict:
     resolved_agent_secret = _env_or_fallback(
         os.environ.get(f"SEAMLESS_AGENT_SECRET_{agent_code.upper()}"),
         os.environ.get("SEAMLESS_AGENT_SECRET"),
+        os.environ.get("SEAMLESS_AGENT_SECRET_KEY"),
         f"{agent_code}_secret",
     )
     return {
