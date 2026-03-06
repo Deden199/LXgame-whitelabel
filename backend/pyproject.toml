@@ -1,0 +1,12 @@
+[build-system]
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "looxgame-api"
+version = "1.0.0"
+description = "LooxGame Operator Gaming Engine API"
+requires-python = ">=3.11"
+
+[tool.setuptools]
+packages = []

@@ -1,0 +1,22 @@
+/* Main App styles - minimal since we use Tailwind */
+
+/* Prevent text-align center on App container */
+.App {
+  text-align: left;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Better image rendering */
+img {
+  image-rendering: -webkit-optimize-contrast;
+}
+
+/* Transition optimizations */
+.transition-gpu {
+  will-change: transform;
+  transform: translateZ(0);
+}

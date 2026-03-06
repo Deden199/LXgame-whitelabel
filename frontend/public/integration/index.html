@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LooxGame Wallet API Integration</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #f8fafc;
+        --surface: #ffffff;
+        --surface-soft: #f1f5f9;
+        --text: #0f172a;
+        --muted: #475569;
+        --border: #cbd5e1;
+        --primary: #2563eb;
+        --success: #047857;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #020617;
+          --surface: #0f172a;
+          --surface-soft: #1e293b;
+          --text: #e2e8f0;
+          --muted: #94a3b8;
+          --border: #334155;
+          --primary: #60a5fa;
+          --success: #34d399;
+        }
+      }
+
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: radial-gradient(circle at top, rgba(37, 99, 235, 0.15), transparent 55%), var(--bg);
+        color: var(--text);
+        line-height: 1.6;
+      }
+      .container {
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 24px 16px 56px;
+      }
+      .hero, .card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+      }
+      .hero {
+        padding: 26px;
+        margin-bottom: 20px;
+      }
+      h1 { margin: 0 0 10px; font-size: clamp(1.5rem, 3vw, 2.2rem); }
+      h2 { margin: 0 0 10px; font-size: 1.2rem; }
+      p { margin: 0 0 8px; color: var(--muted); }
+      code { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+      .meta {
+        display: grid;
+        gap: 10px;
+        margin-top: 16px;
+      }
+      .meta strong { color: var(--text); }
+      .card {
+        padding: 20px;
+        margin-bottom: 16px;
+      }
+      .endpoint-title {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+        margin-bottom: 8px;
+      }
+      .method {
+        font-size: 0.78rem;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        font-weight: 700;
+        color: #fff;
+        background: var(--primary);
+        border-radius: 999px;
+        padding: 2px 10px;
+      }
+      pre {
+        margin: 10px 0 0;
+        background: var(--surface-soft);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 14px;
+        overflow-x: auto;
+        font-size: 0.86rem;
+      }
+      .idempotency {
+        border-left: 4px solid var(--success);
+        padding-left: 14px;
+      }
+      .endpoint-list {
+        margin: 8px 0 0;
+        padding-left: 20px;
+      }
+      .endpoint-list li { margin-bottom: 4px; color: var(--muted); }
+      .endpoint-list code { color: var(--text); }
+    </style>
+  </head>
+  <body>
+    <main class="container">
+      <section class="hero">
+        <h1>LooxGame Wallet API Integration</h1>
+        <p>Integration reference for aggregator partners.</p>
+        <div class="meta">
+          <div><strong>Base URL:</strong> <code>https://api.looxgame.com/api/</code></div>
+          <div><strong>Authentication:</strong> Header <code>X-API-Key: &lt;your-key&gt;</code></div>
+          <div>
+            <strong>Wallet Endpoints:</strong>
+            <ul class="endpoint-list">
+              <li><code>POST /api/wallet/balance</code></li>
+              <li><code>POST /api/wallet/debit</code></li>
+              <li><code>POST /api/wallet/credit</code></li>
+              <li><code>POST /api/wallet/rollback</code></li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>POST /api/wallet/balance</h2>
+        <p>Fetch player balance using IDR integer value (no decimals).</p>
+        <pre><code>// Request
+{
+  "player_id": "player-10001",
+  "currency": "IDR"
+}
+
+// Response
+{
+  "status": "success",
+  "player_id": "player-10001",
+  "currency": "IDR",
+  "balance": 250000
+}</code></pre>
+      </section>
+
+      <section class="card">
+        <div class="endpoint-title">
+          <span class="method">POST</span><h2>/api/wallet/debit</h2>
+        </div>
+        <p>Deduct stake amount from player wallet.</p>
+        <pre><code>// Request
+{
+  "transaction_id": "txn-debit-9001",
+  "player_id": "player-10001",
+  "currency": "IDR",
+  "amount": 10000,
+  "game_id": "slot-gates",
+  "round_id": "round-78511"
+}
+
+// Response
+{
+  "status": "success",
+  "transaction_id": "txn-debit-9001",
+  "player_id": "player-10001",
+  "currency": "IDR",
+  "balance": 240000
+}</code></pre>
+      </section>
+
+      <section class="card">
+        <div class="endpoint-title">
+          <span class="method">POST</span><h2>/api/wallet/credit</h2>
+        </div>
+        <p>Credit winnings back to player wallet.</p>
+        <pre><code>// Request
+{
+  "transaction_id": "txn-credit-9002",
+  "player_id": "player-10001",
+  "currency": "IDR",
+  "amount": 18500,
+  "game_id": "slot-gates",
+  "round_id": "round-78511"
+}
+
+// Response
+{
+  "status": "success",
+  "transaction_id": "txn-credit-9002",
+  "player_id": "player-10001",
+  "currency": "IDR",
+  "balance": 258500
+}</code></pre>
+      </section>
+
+      <section class="card">
+        <div class="endpoint-title">
+          <span class="method">POST</span><h2>/api/wallet/rollback</h2>
+        </div>
+        <p>Revert a previous transaction if provider retries or cancels settlement.</p>
+        <pre><code>// Request
+{
+  "transaction_id": "txn-rollback-9003",
+  "reference_transaction_id": "txn-debit-9001",
+  "player_id": "player-10001",
+  "currency": "IDR",
+  "amount": 10000
+}
+
+// Response
+{
+  "status": "success",
+  "transaction_id": "txn-rollback-9003",
+  "player_id": "player-10001",
+  "currency": "IDR",
+  "balance": 268500
+}</code></pre>
+      </section>
+
+      <section class="card idempotency">
+        <h2>Idempotency</h2>
+        <p>
+          Each <code>transaction_id</code> is idempotent. Repeated calls return original result without
+          modifying balance.
+        </p>
+      </section>
+    </main>
+  </body>
+</html>
