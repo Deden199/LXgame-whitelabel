@@ -15,7 +15,7 @@ from dotenv import load_dotenv
 from motor.motor_asyncio import AsyncIOMotorClient
 
 from providers.seamless_adapter import SeamlessAdapter
-from seamless_live_catalog import enrich_catalog_with_live_api
+from seamless_live_catalog import enrich_catalog_with_live_api, sync_live_catalog_to_db
 
 load_dotenv(ROOT_DIR / '.env')
 
@@ -41,7 +41,10 @@ async def main_async(args: argparse.Namespace) -> int:
     try:
         tenant_ids = await resolve_tenant_ids(db, args.tenants)
         adapter = SeamlessAdapter()
-        summary = await enrich_catalog_with_live_api(db, tenant_ids=tenant_ids, adapter=adapter)
+        if args.mode == 'sync':
+            summary = await sync_live_catalog_to_db(db, tenant_ids=tenant_ids, adapter=adapter)
+        else:
+            summary = await enrich_catalog_with_live_api(db, tenant_ids=tenant_ids, adapter=adapter)
         print(json.dumps(summary, indent=2))
         return 0
     finally:
@@ -49,8 +52,9 @@ async def main_async(args: argparse.Namespace) -> int:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description='Enrich seamless catalog from live provider API')
+    parser = argparse.ArgumentParser(description='Sync or enrich seamless catalog from live provider API')
     parser.add_argument('--tenants', required=True, help='Comma-separated tenant slugs or ids')
+    parser.add_argument('--mode', choices=['sync', 'enrich'], default='sync', help='sync = rebuild active catalog from live API, enrich = patch existing catalog with live imagery/mapping')
     return parser
 
 

@@ -7,6 +7,8 @@ from pathlib import Path
 from auth import hash_password
 from catalog_sync import sync_catalog_to_db
 from finance.models import DEFAULT_BUFFER_MIN_THRESHOLD_MINOR
+from providers.seamless_adapter import SeamlessAdapter
+from seamless_live_catalog import sync_live_catalog_to_db
 
 DEFAULT_WORKBOOK_PATH = "/app/downloads/EGS_Game_List_Staging.xlsx"
 
@@ -197,16 +199,29 @@ async def bootstrap_default_platform_data(db, workbook_path: str = DEFAULT_WORKB
             upsert=True,
         )
 
-    summary = await sync_catalog_to_db(
-        db,
-        workbook_path=workbook_path,
-        tenant_ids=[tenant["id"] for tenant in tenants],
-        replace_existing=True,
-        source="seamless_bootstrap",
-    )
+    tenant_ids = [tenant["id"] for tenant in tenants]
+    bootstrap_source = os.environ.get("SEAMLESS_BOOTSTRAP_SOURCE", "api").strip().lower()
+    adapter = SeamlessAdapter()
+    if bootstrap_source == "api" and adapter.is_configured_for_launch():
+        summary = await sync_live_catalog_to_db(
+            db,
+            tenant_ids=tenant_ids,
+            adapter=adapter,
+        )
+        source_label = "live_api"
+    else:
+        summary = await sync_catalog_to_db(
+            db,
+            workbook_path=workbook_path,
+            tenant_ids=tenant_ids,
+            replace_existing=True,
+            source="seamless_bootstrap",
+        )
+        source_label = "workbook"
     return {
         "tenants": [tenant["slug"] for tenant in tenants],
         "players": [user["email"] for user in users if user["role"] == "player"],
         "summary": summary,
         "workbook_path": workbook_path,
+        "catalog_source": source_label,
     }

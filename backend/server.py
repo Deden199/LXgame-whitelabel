@@ -4561,8 +4561,8 @@ async def startup_event():
             logger.info("No tenants found in mock mode, creating mock seed data...")
             await ensure_test_seed_data()
             logger.info("Mock seed complete")
-        elif tenant_count == 0 or seamless_game_count < 3000:
-            logger.info("Running seamless bootstrap (tenant_count=%s seamless_game_count=%s)", tenant_count, seamless_game_count)
+        elif tenant_count == 0:
+            logger.info("Running seamless bootstrap for empty staging target")
             await bootstrap_default_platform_data(db)
             logger.info("Seamless bootstrap complete")
         else:

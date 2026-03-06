@@ -5,6 +5,10 @@
 - Tenant slug: `aurumbet`
 - Player: `player1@aurumbet.demo`
 
+## Intended staging database target
+- `DB_NAME=loocgamedb`
+- `MONGO_URL` is supplied securely via ignored environment/local env
+
 ## Login smoke
 ```bash
 curl -X POST http://127.0.0.1:8001/api/auth/login \
