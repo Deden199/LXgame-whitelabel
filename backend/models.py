@@ -182,8 +182,11 @@ class Game(BaseModel):
     game_launch_id: Optional[str] = None
     provider_code: Optional[str] = None
     game_code: Optional[str] = None
+    launch_provider_code: Optional[str] = None
+    launch_game_code: Optional[str] = None
     supplier: Optional[str] = None
     platform: Optional[str] = None
+    source_banner_url: Optional[str] = None
     # Tag flags
     is_hot: Optional[bool] = False
     is_new: Optional[bool] = False
