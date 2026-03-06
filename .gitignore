@@ -49,3 +49,7 @@ evidence/
 *.tar
 *.tar.gz
 *.tgz
+-e 
+# Environment files
+*.env
+*.env.*
