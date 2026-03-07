@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { AlertCircle, ChevronLeft, ChevronRight, Flame, Gamepad2, Loader2, Play, RefreshCw, Search, Sparkles, Star, TriangleAlert, X, Zap } from 'lucide-react';
+import { AlertCircle, ChevronLeft, ChevronRight, Clock, Flame, Gamepad2, Loader2, Play, RefreshCw, Search, Sparkles, Star, TriangleAlert, X, Zap } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '../../context/AuthContext';
 import { useCurrency } from '../../hooks/useCurrency';
@@ -30,8 +30,41 @@ const CATEGORY_ICONS = {
 };
 
 const INITIAL_FETCH_ERROR = { games: '', metadata: '' };
+const GAMES_PER_PAGE = 30;
+const RECENTLY_PLAYED_KEY = 'looxgame_recently_played';
+const MAX_RECENT_GAMES = 10;
 
-const GameCard = React.memo(function GameCard({ game, onLaunch, index = 0, blockedReason = '' }) {
+// Helper to manage recently played games in localStorage
+const getRecentlyPlayed = () => {
+  try {
+    const stored = localStorage.getItem(RECENTLY_PLAYED_KEY);
+    return stored ? JSON.parse(stored) : [];
+  } catch {
+    return [];
+  }
+};
+
+const addToRecentlyPlayed = (game) => {
+  try {
+    const current = getRecentlyPlayed();
+    const filtered = current.filter(g => g.id !== game.id);
+    const updated = [{ 
+      id: game.id, 
+      name: game.name, 
+      thumbnail_url: game.thumbnail_url,
+      provider_code: game.provider_code,
+      provider_name: game.provider_name,
+      category: game.category,
+      playedAt: Date.now() 
+    }, ...filtered].slice(0, MAX_RECENT_GAMES);
+    localStorage.setItem(RECENTLY_PLAYED_KEY, JSON.stringify(updated));
+    return updated;
+  } catch {
+    return [];
+  }
+};
+
+const GameCard = React.memo(function GameCard({ game, onLaunch, index = 0, blockedReason = '', compact = false }) {
   const providerLabel = game.provider_name || game.provider_code || 'Provider';
   const isBlocked = Boolean(blockedReason) || game.is_enabled === false || game.is_active === false;
   const badges = [
@@ -48,7 +81,6 @@ const GameCard = React.memo(function GameCard({ game, onLaunch, index = 0, block
     onLaunch(game);
   };
 
-  // Determine loading priority based on index
   const loadingPriority = index < 8 ? 'eager' : 'lazy';
 
   return (
@@ -74,7 +106,7 @@ const GameCard = React.memo(function GameCard({ game, onLaunch, index = 0, block
           </div>
           <span className="mt-2 text-xs font-medium text-white/95">Play</span>
         </div>
-        {badges.length > 0 ? (
+        {!compact && badges.length > 0 ? (
           <div className="absolute right-2 top-2 flex flex-col gap-1">
             {badges.map((badge) => (
               <span
@@ -88,29 +120,188 @@ const GameCard = React.memo(function GameCard({ game, onLaunch, index = 0, block
           </div>
         ) : null}
         {isBlocked ? (
-          <span
-            className="absolute left-2 top-2 rounded-full border border-border/60 bg-background/85 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground"
-            data-testid={`game-unavailable-badge-${game.id}`}
-          >
+          <span className="absolute left-2 top-2 rounded-full border border-border/60 bg-background/85 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
             Unavailable
           </span>
         ) : null}
         <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between gap-2 rounded-full bg-black/55 px-2.5 py-1.5 backdrop-blur-sm">
           <div className="flex min-w-0 items-center gap-2">
             <ProviderLogoBadge provider={game} className="h-5 w-5 rounded-full border-white/10" testId={`provider-logo-img-${game.id}`} />
-            <span className="truncate text-[11px] font-medium text-white/90" data-testid={`game-provider-${game.id}`}>
-              {providerLabel}
-            </span>
+            <span className="truncate text-[11px] font-medium text-white/90">{providerLabel}</span>
           </div>
           <span className="rounded-full bg-white/10 px-2 py-0.5 text-[10px] uppercase tracking-wide text-white/70">{game.category}</span>
         </div>
       </div>
       <div className="game-card-title">
-        <p className="line-clamp-2 text-sm font-medium text-foreground/95" data-testid={`game-title-${game.id}`}>{game.name}</p>
+        <p className="line-clamp-2 text-sm font-medium text-foreground/95">{game.name}</p>
       </div>
     </button>
   );
 });
+
+// Search Autocomplete Component
+function SearchAutocomplete({ value, onChange, onSelect, games, loading }) {
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [focusedIndex, setFocusedIndex] = useState(-1);
+  const inputRef = useRef(null);
+  const listRef = useRef(null);
+
+  const suggestions = useMemo(() => {
+    if (!value || value.length < 2) return [];
+    const searchLower = value.toLowerCase();
+    return games
+      .filter(g => g.name.toLowerCase().includes(searchLower))
+      .slice(0, 8);
+  }, [value, games]);
+
+  const handleKeyDown = (e) => {
+    if (!showSuggestions || suggestions.length === 0) return;
+    
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setFocusedIndex(prev => Math.min(prev + 1, suggestions.length - 1));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setFocusedIndex(prev => Math.max(prev - 1, -1));
+    } else if (e.key === 'Enter' && focusedIndex >= 0) {
+      e.preventDefault();
+      onSelect(suggestions[focusedIndex]);
+      setShowSuggestions(false);
+    } else if (e.key === 'Escape') {
+      setShowSuggestions(false);
+    }
+  };
+
+  useEffect(() => {
+    setFocusedIndex(-1);
+  }, [value]);
+
+  return (
+    <div className="relative">
+      <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+      <Input
+        ref={inputRef}
+        value={value}
+        onChange={(e) => {
+          onChange(e.target.value);
+          setShowSuggestions(true);
+        }}
+        onFocus={() => setShowSuggestions(true)}
+        onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+        onKeyDown={handleKeyDown}
+        placeholder="Search games..."
+        className="h-10 rounded-full border-border/60 bg-card/70 pl-10 pr-10"
+        data-testid="games-search-input"
+        autoComplete="off"
+      />
+      {value ? (
+        <button 
+          type="button" 
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors" 
+          onClick={() => { onChange(''); setShowSuggestions(false); }}
+        >
+          <X className="h-4 w-4" />
+        </button>
+      ) : null}
+      
+      {/* Autocomplete Dropdown */}
+      {showSuggestions && suggestions.length > 0 && (
+        <div 
+          ref={listRef}
+          className="search-autocomplete-dropdown"
+          data-testid="search-autocomplete"
+        >
+          {suggestions.map((game, idx) => (
+            <button
+              key={game.id}
+              type="button"
+              className={cn(
+                'search-autocomplete-item',
+                focusedIndex === idx && 'search-autocomplete-item-focused'
+              )}
+              onClick={() => {
+                onSelect(game);
+                setShowSuggestions(false);
+              }}
+              onMouseEnter={() => setFocusedIndex(idx)}
+            >
+              <GameThumbnail 
+                game={game} 
+                className="h-10 w-16 rounded-lg object-cover flex-shrink-0" 
+              />
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-medium text-foreground truncate">{game.name}</p>
+                <p className="text-xs text-muted-foreground">{game.provider_name || game.provider_code}</p>
+              </div>
+              <span className="text-[10px] uppercase text-muted-foreground bg-muted/50 px-2 py-0.5 rounded-full">
+                {game.category}
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
+      
+      {/* Loading indicator */}
+      {loading && value && (
+        <div className="absolute right-10 top-1/2 -translate-y-1/2">
+          <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Recently Played Section
+function RecentlyPlayedSection({ recentGames, allGames, onLaunch }) {
+  const listRef = useRef(null);
+  
+  // Hydrate recent games with full data from allGames
+  const hydratedRecent = useMemo(() => {
+    return recentGames
+      .map(recent => {
+        const fullGame = allGames.find(g => g.id === recent.id);
+        return fullGame || recent;
+      })
+      .filter(Boolean);
+  }, [recentGames, allGames]);
+
+  if (hydratedRecent.length === 0) return null;
+
+  const scroll = (direction) => {
+    listRef.current?.scrollBy({ left: direction * 200, behavior: 'smooth' });
+  };
+
+  return (
+    <section className="horizontal-game-section" data-testid="section-recently-played">
+      <div className="horizontal-section-header">
+        <div className="flex items-center gap-2">
+          <div className="section-icon-wrapper recently-played-icon">
+            <Clock className="h-4 w-4 text-sky-400" />
+          </div>
+          <div>
+            <h2 className="section-title">Recently Played</h2>
+            <p className="section-subtitle">{hydratedRecent.length} games</p>
+          </div>
+        </div>
+        <div className="hidden items-center gap-1.5 md:flex">
+          <Button variant="outline" size="icon" className="h-7 w-7 rounded-full" onClick={() => scroll(-1)}>
+            <ChevronLeft className="h-3.5 w-3.5" />
+          </Button>
+          <Button variant="outline" size="icon" className="h-7 w-7 rounded-full" onClick={() => scroll(1)}>
+            <ChevronRight className="h-3.5 w-3.5" />
+          </Button>
+        </div>
+      </div>
+      <div ref={listRef} className="horizontal-game-list">
+        {hydratedRecent.map((game, index) => (
+          <div key={game.id} className="horizontal-game-card-wrapper">
+            <GameCard game={game} onLaunch={onLaunch} index={index} compact />
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
 
 function HorizontalGameSection({ title, icon: Icon, games, loading, onLaunch }) {
   const listRef = useRef(null);
@@ -171,16 +362,34 @@ export default function PlayerGamesPage() {
   const [tagFilter, setTagFilter] = useState('');
   const [loadingGames, setLoadingGames] = useState(true);
   const [loadingMeta, setLoadingMeta] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [fetchError, setFetchError] = useState(INITIAL_FETCH_ERROR);
   const [showGameDialog, setShowGameDialog] = useState(false);
   const [selectedGame, setSelectedGame] = useState(null);
   const [launchPreview, setLaunchPreview] = useState(null);
   const [launchingGameId, setLaunchingGameId] = useState('');
+  const [recentlyPlayed, setRecentlyPlayed] = useState([]);
+  
+  // Infinite scroll state
+  const [displayedCount, setDisplayedCount] = useState(GAMES_PER_PAGE);
+  const [hasMore, setHasMore] = useState(true);
+  const loadMoreRef = useRef(null);
+
+  // Load recently played on mount
+  useEffect(() => {
+    setRecentlyPlayed(getRecentlyPlayed());
+  }, []);
 
   useEffect(() => {
     const timer = window.setTimeout(() => setDebouncedSearch(searchInput.trim()), 200);
     return () => window.clearTimeout(timer);
   }, [searchInput]);
+
+  // Reset displayed count when filters change
+  useEffect(() => {
+    setDisplayedCount(GAMES_PER_PAGE);
+    setHasMore(true);
+  }, [categoryFilter, providerFilter, tagFilter, debouncedSearch]);
 
   const fetchMetadata = useCallback(async () => {
     setLoadingMeta(true);
@@ -227,6 +436,38 @@ export default function PlayerGamesPage() {
     fetchGames();
   }, [fetchGames]);
 
+  // Infinite scroll observer
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !loadingMore && !loadingGames) {
+          loadMoreGames();
+        }
+      },
+      { threshold: 0.1, rootMargin: '100px' }
+    );
+
+    if (loadMoreRef.current) {
+      observer.observe(loadMoreRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [hasMore, loadingMore, loadingGames, displayedCount, games.length]);
+
+  const loadMoreGames = useCallback(() => {
+    if (displayedCount >= games.length) {
+      setHasMore(false);
+      return;
+    }
+    
+    setLoadingMore(true);
+    // Simulate small delay for smooth UX
+    setTimeout(() => {
+      setDisplayedCount(prev => Math.min(prev + GAMES_PER_PAGE, games.length));
+      setLoadingMore(false);
+    }, 300);
+  }, [displayedCount, games.length]);
+
   const providerLookup = useMemo(() => {
     const lookup = new Map();
     providers.forEach((provider) => {
@@ -239,6 +480,12 @@ export default function PlayerGamesPage() {
   const hydratedGames = useMemo(
     () => games.map((game) => ({ ...providerLookup.get(game.provider_code), ...game })),
     [games, providerLookup]
+  );
+
+  // Games to display (infinite scroll)
+  const displayedGames = useMemo(
+    () => hydratedGames.slice(0, displayedCount),
+    [hydratedGames, displayedCount]
   );
 
   const hotGames = useMemo(() => hydratedGames.filter((game) => game.is_hot).slice(0, 12), [hydratedGames]);
@@ -259,6 +506,10 @@ export default function PlayerGamesPage() {
   };
 
   const launchGame = async (game) => {
+    // Add to recently played
+    const updatedRecent = addToRecentlyPlayed(game);
+    setRecentlyPlayed(updatedRecent);
+    
     setLaunchingGameId(game.id);
     try {
       const response = await api.post(`/games/${game.id}/launch`);
@@ -283,6 +534,14 @@ export default function PlayerGamesPage() {
     }
   };
 
+  // Handle autocomplete selection
+  const handleAutocompleteSelect = (game) => {
+    setSearchInput(game.name);
+    launchGame(game);
+  };
+
+  const isDefaultView = !searchInput && categoryFilter === 'all' && providerFilter === 'all' && !tagFilter;
+
   return (
     <div className="player-content-container space-y-4" data-testid="player-games-page">
       <section className="games-filter-section" data-testid="games-filter-section">
@@ -298,21 +557,15 @@ export default function PlayerGamesPage() {
           </Button>
         </div>
 
-        {/* Search bar - full width on mobile */}
-        <div className="relative mb-3">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
+        {/* Search bar with autocomplete */}
+        <div className="mb-3">
+          <SearchAutocomplete
             value={searchInput}
-            onChange={(event) => setSearchInput(event.target.value)}
-            placeholder="Search games..."
-            className="h-10 rounded-full border-border/60 bg-card/70 pl-10 pr-10"
-            data-testid="games-search-input"
+            onChange={setSearchInput}
+            onSelect={handleAutocompleteSelect}
+            games={hydratedGames}
+            loading={loadingGames}
           />
-          {searchInput ? (
-            <button type="button" className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors" onClick={() => setSearchInput('')}>
-              <X className="h-4 w-4" />
-            </button>
-          ) : null}
         </div>
 
         {/* Provider filter - horizontal scroll */}
@@ -329,10 +582,7 @@ export default function PlayerGamesPage() {
               <button
                 key={category.name}
                 type="button"
-                className={cn(
-                  'filter-chip',
-                  active && 'filter-chip-active'
-                )}
+                className={cn('filter-chip', active && 'filter-chip-active')}
                 onClick={() => setCategoryFilter(category.name)}
                 data-testid={`games-category-chip-${category.name}`}
               >
@@ -354,10 +604,7 @@ export default function PlayerGamesPage() {
             <button
               key={tag.value}
               type="button"
-              className={cn(
-                'tag-chip',
-                tagFilter === tag.value && 'tag-chip-active'
-              )}
+              className={cn('tag-chip', tagFilter === tag.value && 'tag-chip-active')}
               onClick={() => setTagFilter(tagFilter === tag.value ? '' : tag.value)}
               data-testid={`games-tag-chip-${tag.value}`}
             >
@@ -365,13 +612,8 @@ export default function PlayerGamesPage() {
               <span>{tag.label}</span>
             </button>
           ))}
-          {(searchInput || categoryFilter !== 'all' || providerFilter !== 'all' || tagFilter) ? (
-            <button 
-              type="button" 
-              className="tag-chip tag-chip-clear"
-              onClick={clearFilters} 
-              data-testid="games-clear-filters-button"
-            >
+          {!isDefaultView ? (
+            <button type="button" className="tag-chip tag-chip-clear" onClick={clearFilters} data-testid="games-clear-filters-button">
               <X className="h-3 w-3" />
               <span>Clear</span>
             </button>
@@ -384,14 +626,23 @@ export default function PlayerGamesPage() {
       {fetchError.metadata ? (
         <Alert variant="destructive" data-testid="games-error-state">
           <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Couldn’t load filters</AlertTitle>
+          <AlertTitle>Couldn't load filters</AlertTitle>
           <AlertDescription>{fetchError.metadata}</AlertDescription>
         </Alert>
       ) : null}
 
-      {!searchInput && categoryFilter === 'all' && providerFilter === 'all' && !tagFilter ? <HeroBanner games={hydratedGames.slice(0, 12)} onLaunch={launchGame} /> : null}
+      {/* Recently Played Section - show on default view */}
+      {isDefaultView && recentlyPlayed.length > 0 && !loadingGames ? (
+        <RecentlyPlayedSection 
+          recentGames={recentlyPlayed} 
+          allGames={hydratedGames} 
+          onLaunch={launchGame} 
+        />
+      ) : null}
 
-      {!searchInput && categoryFilter === 'all' && providerFilter === 'all' && !tagFilter ? (
+      {isDefaultView ? <HeroBanner games={hydratedGames.slice(0, 12)} onLaunch={launchGame} /> : null}
+
+      {isDefaultView ? (
         <>
           {hotGames.length > 0 || loadingGames ? <HorizontalGameSection title="Hot Games" icon={Flame} games={hotGames} loading={loadingGames} onLaunch={launchGame} /> : null}
           {newGames.length > 0 || loadingGames ? <HorizontalGameSection title="New Games" icon={Sparkles} games={newGames} loading={loadingGames} onLaunch={launchGame} /> : null}
@@ -403,7 +654,12 @@ export default function PlayerGamesPage() {
         <div className="flex items-center justify-between gap-3">
           <div>
             <h2 className="text-sm font-semibold text-foreground">All games</h2>
-            <p className="text-xs text-muted-foreground">Browse the complete catalog for your tenant.</p>
+            <p className="text-xs text-muted-foreground">
+              {displayedGames.length < hydratedGames.length 
+                ? `Showing ${displayedGames.length} of ${hydratedGames.length} games`
+                : `${hydratedGames.length} games`
+              }
+            </p>
           </div>
           {loadingGames ? <Loader2 className="h-4 w-4 animate-spin text-primary" /> : null}
         </div>
@@ -411,7 +667,7 @@ export default function PlayerGamesPage() {
         {fetchError.games ? (
           <Alert variant="destructive" data-testid="games-error-state">
             <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Couldn’t load games</AlertTitle>
+            <AlertTitle>Couldn't load games</AlertTitle>
             <AlertDescription className="space-y-3">
               <p>{fetchError.games}</p>
               <Button variant="outline" size="sm" onClick={fetchGames} data-testid="games-retry-button">Retry</Button>
@@ -419,7 +675,7 @@ export default function PlayerGamesPage() {
           </Alert>
         ) : loadingGames ? (
           <div className="games-grid" data-testid="games-loading-skeleton">
-            {[...Array(18)].map((_, index) => (
+            {[...Array(12)].map((_, index) => (
               <div key={index} className="space-y-2">
                 <Skeleton className="aspect-[16/10] rounded-xl" />
                 <Skeleton className="h-4 w-4/5" />
@@ -434,13 +690,40 @@ export default function PlayerGamesPage() {
             <Button variant="outline" onClick={clearFilters} data-testid="games-clear-filters-button">Clear filters</Button>
           </div>
         ) : (
-          <div className="games-grid">
-            {hydratedGames.map((game, index) => (
-              <div key={game.id} className="game-card-animate" data-index={Math.min(index, 11)}>
-                <GameCard game={game} onLaunch={launchGame} index={index} blockedReason={launchingGameId && launchingGameId !== game.id ? '' : ''} />
+          <>
+            <div className="games-grid">
+              {displayedGames.map((game, index) => (
+                <div key={game.id} className="game-card-animate" data-index={Math.min(index, 11)}>
+                  <GameCard game={game} onLaunch={launchGame} index={index} />
+                </div>
+              ))}
+            </div>
+            
+            {/* Infinite scroll trigger */}
+            {hasMore && displayedCount < hydratedGames.length && (
+              <div ref={loadMoreRef} className="infinite-scroll-trigger">
+                {loadingMore ? (
+                  <div className="flex items-center justify-center gap-2 py-6">
+                    <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                    <span className="text-sm text-muted-foreground">Loading more games...</span>
+                  </div>
+                ) : (
+                  <div className="flex justify-center py-4">
+                    <Button variant="outline" size="sm" onClick={loadMoreGames} className="rounded-full">
+                      Load more games
+                    </Button>
+                  </div>
+                )}
               </div>
-            ))}
-          </div>
+            )}
+            
+            {/* End of list indicator */}
+            {!hasMore && hydratedGames.length > GAMES_PER_PAGE && (
+              <p className="text-center text-xs text-muted-foreground py-4">
+                You've reached the end • {hydratedGames.length} games
+              </p>
+            )}
+          </>
         )}
       </section>
 
@@ -448,9 +731,7 @@ export default function PlayerGamesPage() {
         <DialogContent className="max-w-lg border-border/60 bg-card/95 backdrop-blur">
           <DialogHeader>
             <DialogTitle>{selectedGame?.name || 'Game launch status'}</DialogTitle>
-            <DialogDescription>
-              {selectedGame?.provider_name || 'Provider'}
-            </DialogDescription>
+            <DialogDescription>{selectedGame?.provider_name || 'Provider'}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="overflow-hidden rounded-2xl border border-border/50 bg-muted/30">

@@ -1431,3 +1431,104 @@ img[loading="lazy"] {
     font-size: 10px;
   }
 }
+
+
+/* ===== SEARCH AUTOCOMPLETE ===== */
+.search-autocomplete-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  z-index: 50;
+  background: hsl(var(--card) / 0.98);
+  backdrop-filter: blur(12px);
+  border: 1px solid hsl(var(--border) / 0.6);
+  border-radius: 16px;
+  box-shadow: 
+    0 10px 40px -10px hsl(var(--background) / 0.8),
+    0 4px 16px -4px hsl(var(--background) / 0.4);
+  overflow: hidden;
+  max-height: 360px;
+  overflow-y: auto;
+}
+
+.search-autocomplete-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  width: 100%;
+  text-align: left;
+  transition: background 150ms ease;
+  border-bottom: 1px solid hsl(var(--border) / 0.3);
+}
+
+.search-autocomplete-item:last-child {
+  border-bottom: none;
+}
+
+.search-autocomplete-item:hover,
+.search-autocomplete-item-focused {
+  background: hsl(var(--primary) / 0.08);
+}
+
+.search-autocomplete-item img {
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+/* ===== RECENTLY PLAYED SECTION ===== */
+.recently-played-icon {
+  background: hsl(200 80% 50% / 0.12);
+}
+
+/* ===== INFINITE SCROLL ===== */
+.infinite-scroll-trigger {
+  min-height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Smooth fade-in for newly loaded items */
+@keyframes fade-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.games-grid > .game-card-animate {
+  animation: fade-slide-in 350ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Stagger animation delays for first batch */
+.games-grid > .game-card-animate:nth-child(n+13) {
+  animation-delay: 0ms;
+}
+
+/* Mobile optimizations for autocomplete */
+@media (max-width: 640px) {
+  .search-autocomplete-dropdown {
+    border-radius: 14px;
+    max-height: 300px;
+  }
+  
+  .search-autocomplete-item {
+    padding: 8px 12px;
+    gap: 10px;
+  }
+  
+  .search-autocomplete-item img {
+    width: 48px;
+    height: 30px;
+  }
+  
+  .search-autocomplete-item p.text-sm {
+    font-size: 13px;
+  }
+}
