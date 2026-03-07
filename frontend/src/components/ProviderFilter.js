@@ -47,7 +47,7 @@ function ProviderHorizontalScroll({ providers, selected, onSelect, loading }) {
 
     update();
     const node = scrollRef.current;
-    node?.addEventListener('scroll', update);
+    node?.addEventListener('scroll', update, { passive: true });
     window.addEventListener('resize', update);
     return () => {
       node?.removeEventListener('scroll', update);
@@ -56,36 +56,41 @@ function ProviderHorizontalScroll({ providers, selected, onSelect, loading }) {
   }, [providers]);
 
   const scroll = (direction) => {
-    scrollRef.current?.scrollBy({ left: direction === 'left' ? -220 : 220, behavior: 'smooth' });
+    scrollRef.current?.scrollBy({ left: direction === 'left' ? -180 : 180, behavior: 'smooth' });
   };
 
   if (loading) {
-    return <div className="flex gap-2">{[...Array(6)].map((_, index) => <div key={index} className="h-11 w-20 animate-pulse rounded-xl bg-muted" />)}</div>;
+    return (
+      <div className="provider-chips-row">
+        {[...Array(5)].map((_, index) => (
+          <div key={index} className="provider-chip-skeleton" />
+        ))}
+      </div>
+    );
   }
 
   return (
-    <div className="relative">
+    <div className="provider-filter-wrapper">
       {showLeftArrow && (
         <button
           type="button"
-          className="absolute left-0 top-1/2 z-10 -translate-y-1/2 rounded-full border border-border/60 bg-card/90 p-1.5 shadow"
+          className="provider-scroll-btn provider-scroll-left"
           onClick={() => scroll('left')}
           aria-label="Scroll providers left"
         >
           <ChevronLeft className="h-4 w-4" />
         </button>
       )}
-      <div ref={scrollRef} className="flex gap-2 overflow-x-auto px-1 py-1 scrollbar-hide">
-        <Button
+      <div ref={scrollRef} className="provider-chips-row">
+        <button
           type="button"
-          variant={selected === 'all' ? 'secondary' : 'outline'}
-          className="h-10 rounded-full px-3 text-xs"
+          className={cn('provider-chip', selected === 'all' && 'provider-chip-active')}
           onClick={() => onSelect('all')}
           data-testid="games-provider-filter-item-all"
         >
-          <Grid3X3 className="mr-1.5 h-3.5 w-3.5" />
-          All
-        </Button>
+          <Grid3X3 className="h-4 w-4" />
+          <span>All</span>
+        </button>
         {providers.map((rawProvider) => {
           const provider = normalizeProvider(rawProvider);
           const isSelected = selected === provider.code || selected === provider.slug;
@@ -95,16 +100,13 @@ function ProviderHorizontalScroll({ providers, selected, onSelect, loading }) {
               key={provider.code}
               onClick={() => onSelect(provider.code)}
               data-testid={`games-provider-filter-item-${provider.slug || provider.code}`}
-              className={cn(
-                'flex min-w-[110px] items-center gap-2 rounded-full border px-3 py-2 text-left transition-colors',
-                isSelected
-                  ? 'border-primary/40 bg-primary/10 text-primary'
-                  : 'border-border/60 bg-card/70 text-foreground hover:bg-card'
-              )}
+              className={cn('provider-chip', isSelected && 'provider-chip-active')}
             >
-              <ProviderLogo provider={provider} className="h-7 w-7" testId={`provider-logo-${provider.slug || provider.code}`} />
-              <span className="min-w-0 flex-1 truncate text-xs font-medium">{provider.name}</span>
-              <span className="text-[10px] text-muted-foreground">{provider.gameCount}</span>
+              <ProviderLogo provider={provider} className="h-5 w-5" testId={`provider-logo-${provider.slug || provider.code}`} />
+              <span className="provider-chip-name">{provider.name}</span>
+              {provider.gameCount > 0 && (
+                <span className="provider-chip-count">{provider.gameCount}</span>
+              )}
             </button>
           );
         })}
@@ -112,7 +114,7 @@ function ProviderHorizontalScroll({ providers, selected, onSelect, loading }) {
       {showRightArrow && (
         <button
           type="button"
-          className="absolute right-0 top-1/2 z-10 -translate-y-1/2 rounded-full border border-border/60 bg-card/90 p-1.5 shadow"
+          className="provider-scroll-btn provider-scroll-right"
           onClick={() => scroll('right')}
           aria-label="Scroll providers right"
         >

@@ -48,6 +48,9 @@ const GameCard = React.memo(function GameCard({ game, onLaunch, index = 0, block
     onLaunch(game);
   };
 
+  // Determine loading priority based on index
+  const loadingPriority = index < 8 ? 'eager' : 'lazy';
+
   return (
     <button
       type="button"
@@ -62,6 +65,7 @@ const GameCard = React.memo(function GameCard({ game, onLaunch, index = 0, block
           className="game-card-image h-full w-full object-cover"
           imageTestId={`game-thumbnail-img-${game.id}`}
           fallbackTestId={`game-thumbnail-fallback-${game.id}`}
+          loading={loadingPriority}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-transparent" />
         <div className="game-card-overlay">
@@ -93,7 +97,7 @@ const GameCard = React.memo(function GameCard({ game, onLaunch, index = 0, block
         ) : null}
         <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between gap-2 rounded-full bg-black/55 px-2.5 py-1.5 backdrop-blur-sm">
           <div className="flex min-w-0 items-center gap-2">
-            <ProviderLogoBadge provider={game} className="h-6 w-6 rounded-full border-white/10" testId={`provider-logo-img-${game.id}`} />
+            <ProviderLogoBadge provider={game} className="h-5 w-5 rounded-full border-white/10" testId={`provider-logo-img-${game.id}`} />
             <span className="truncate text-[11px] font-medium text-white/90" data-testid={`game-provider-${game.id}`}>
               {providerLabel}
             </span>
@@ -101,7 +105,7 @@ const GameCard = React.memo(function GameCard({ game, onLaunch, index = 0, block
           <span className="rounded-full bg-white/10 px-2 py-0.5 text-[10px] uppercase tracking-wide text-white/70">{game.category}</span>
         </div>
       </div>
-      <div className="p-3">
+      <div className="game-card-title">
         <p className="line-clamp-2 text-sm font-medium text-foreground/95" data-testid={`game-title-${game.id}`}>{game.name}</p>
       </div>
     </button>
@@ -111,40 +115,40 @@ const GameCard = React.memo(function GameCard({ game, onLaunch, index = 0, block
 function HorizontalGameSection({ title, icon: Icon, games, loading, onLaunch }) {
   const listRef = useRef(null);
   const scroll = (direction) => {
-    listRef.current?.scrollBy({ left: direction * 520, behavior: 'smooth' });
+    listRef.current?.scrollBy({ left: direction * 280, behavior: 'smooth' });
   };
 
   return (
-    <section className="section-compact" data-testid={`section-${title.toLowerCase().replace(/\s+/g, '-')}`}>
-      <div className="mb-3 flex items-center justify-between gap-3">
+    <section className="horizontal-game-section" data-testid={`section-${title.toLowerCase().replace(/\s+/g, '-')}`}>
+      <div className="horizontal-section-header">
         <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+          <div className="section-icon-wrapper">
             <Icon className="h-4 w-4 text-primary" />
           </div>
           <div>
-            <h2 className="text-sm font-semibold text-foreground">{title}</h2>
-            <p className="text-xs text-muted-foreground">{games.length} games</p>
+            <h2 className="section-title">{title}</h2>
+            <p className="section-subtitle">{games.length} games</p>
           </div>
         </div>
-        <div className="hidden items-center gap-2 md:flex">
-          <Button variant="outline" size="icon" className="h-8 w-8 rounded-full" onClick={() => scroll(-1)}>
-            <ChevronLeft className="h-4 w-4" />
+        <div className="hidden items-center gap-1.5 md:flex">
+          <Button variant="outline" size="icon" className="h-7 w-7 rounded-full" onClick={() => scroll(-1)}>
+            <ChevronLeft className="h-3.5 w-3.5" />
           </Button>
-          <Button variant="outline" size="icon" className="h-8 w-8 rounded-full" onClick={() => scroll(1)}>
-            <ChevronRight className="h-4 w-4" />
+          <Button variant="outline" size="icon" className="h-7 w-7 rounded-full" onClick={() => scroll(1)}>
+            <ChevronRight className="h-3.5 w-3.5" />
           </Button>
         </div>
       </div>
-      <div ref={listRef} className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
+      <div ref={listRef} className="horizontal-game-list">
         {loading
-          ? [...Array(8)].map((_, index) => (
-              <div key={index} className="w-[220px] flex-shrink-0 space-y-2">
+          ? [...Array(6)].map((_, index) => (
+              <div key={index} className="horizontal-game-card-wrapper">
                 <Skeleton className="aspect-[16/10] rounded-xl" />
-                <Skeleton className="h-4 w-4/5" />
+                <Skeleton className="mt-2 h-4 w-4/5" />
               </div>
             ))
           : games.map((game, index) => (
-              <div key={game.id} className="w-[220px] flex-shrink-0">
+              <div key={game.id} className="horizontal-game-card-wrapper">
                 <GameCard game={game} onLaunch={onLaunch} index={index} />
               </div>
             ))}
@@ -281,79 +285,96 @@ export default function PlayerGamesPage() {
 
   return (
     <div className="player-content-container space-y-4" data-testid="player-games-page">
-      <section className="desktop-sticky-filter space-y-3 rounded-2xl border border-border/50 bg-card/55 p-4 backdrop-blur-sm">
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold tracking-tight" data-testid="games-page-title">Games</h1>
-            <p className="text-sm text-muted-foreground" data-testid="games-result-count">{pageCountLabel}</p>
+      <section className="games-filter-section" data-testid="games-filter-section">
+        {/* Header row */}
+        <div className="flex items-center justify-between gap-3 mb-3">
+          <div className="min-w-0">
+            <h1 className="text-xl lg:text-2xl font-semibold tracking-tight" data-testid="games-page-title">Games</h1>
+            <p className="text-xs lg:text-sm text-muted-foreground truncate" data-testid="games-result-count">{pageCountLabel}</p>
           </div>
-          <Button variant="outline" className="h-10 rounded-full" onClick={() => { fetchMetadata(); fetchGames(); }} data-testid="games-refresh-button">
-            <RefreshCw className="mr-2 h-4 w-4" />
-            Refresh
+          <Button variant="outline" size="sm" className="h-9 lg:h-10 rounded-full flex-shrink-0" onClick={() => { fetchMetadata(); fetchGames(); }} data-testid="games-refresh-button">
+            <RefreshCw className="h-3.5 w-3.5 lg:mr-2" />
+            <span className="hidden lg:inline">Refresh</span>
           </Button>
         </div>
 
-        <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_220px]">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={searchInput}
-              onChange={(event) => setSearchInput(event.target.value)}
-              placeholder="Search games"
-              className="h-10 rounded-full border-border/60 bg-card/70 pl-10 pr-10"
-              data-testid="games-search-input"
-            />
-            {searchInput ? (
-              <button type="button" className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground" onClick={() => setSearchInput('')}>
-                <X className="h-4 w-4" />
-              </button>
-            ) : null}
-          </div>
-          <ProviderFilter providers={providers} selected={providerFilter} onSelect={setProviderFilter} loading={loadingMeta} variant="auto" />
+        {/* Search bar - full width on mobile */}
+        <div className="relative mb-3">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={searchInput}
+            onChange={(event) => setSearchInput(event.target.value)}
+            placeholder="Search games..."
+            className="h-10 rounded-full border-border/60 bg-card/70 pl-10 pr-10"
+            data-testid="games-search-input"
+          />
+          {searchInput ? (
+            <button type="button" className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors" onClick={() => setSearchInput('')}>
+              <X className="h-4 w-4" />
+            </button>
+          ) : null}
         </div>
 
-        <div className="scroll-container">
+        {/* Provider filter - horizontal scroll */}
+        <div className="mb-3">
+          <ProviderFilter providers={providers} selected={providerFilter} onSelect={setProviderFilter} loading={loadingMeta} variant="scroll" />
+        </div>
+
+        {/* Category chips */}
+        <div className="filter-chips-row mb-2">
           {categories.map((category) => {
             const Icon = CATEGORY_ICONS[category.name] || Gamepad2;
             const active = categoryFilter === category.name;
             return (
-              <Button
+              <button
                 key={category.name}
                 type="button"
-                variant={active ? 'secondary' : 'outline'}
-                className={cn('h-10 rounded-full px-3 text-xs', active && 'border-primary/30 bg-primary/10 text-primary')}
+                className={cn(
+                  'filter-chip',
+                  active && 'filter-chip-active'
+                )}
                 onClick={() => setCategoryFilter(category.name)}
                 data-testid={`games-category-chip-${category.name}`}
               >
-                <Icon className="mr-1.5 h-3.5 w-3.5" />
+                <Icon className="h-3.5 w-3.5" />
                 <span className="capitalize">{category.name}</span>
-                <span className="ml-1 text-muted-foreground">{category.count}</span>
-              </Button>
+                <span className="filter-chip-count">{category.count}</span>
+              </button>
             );
           })}
         </div>
 
-        <div className="flex flex-wrap gap-2">
+        {/* Tag filters + clear */}
+        <div className="flex items-center gap-2 flex-wrap">
           {[
             { value: 'hot', label: 'Hot', icon: Flame },
             { value: 'new', label: 'New', icon: Sparkles },
             { value: 'popular', label: 'Popular', icon: Star },
           ].map((tag) => (
-            <Button
+            <button
               key={tag.value}
               type="button"
-              variant={tagFilter === tag.value ? 'secondary' : 'outline'}
-              className={cn('h-9 rounded-full px-3 text-xs', tagFilter === tag.value && 'border-primary/30 bg-primary/10 text-primary')}
+              className={cn(
+                'tag-chip',
+                tagFilter === tag.value && 'tag-chip-active'
+              )}
               onClick={() => setTagFilter(tagFilter === tag.value ? '' : tag.value)}
+              data-testid={`games-tag-chip-${tag.value}`}
             >
-              <tag.icon className="mr-1.5 h-3.5 w-3.5" />
-              {tag.label}
-            </Button>
+              <tag.icon className="h-3 w-3" />
+              <span>{tag.label}</span>
+            </button>
           ))}
           {(searchInput || categoryFilter !== 'all' || providerFilter !== 'all' || tagFilter) ? (
-            <Button type="button" variant="ghost" className="h-9 rounded-full px-3 text-xs" onClick={clearFilters} data-testid="games-clear-filters-button">
-              Clear filters
-            </Button>
+            <button 
+              type="button" 
+              className="tag-chip tag-chip-clear"
+              onClick={clearFilters} 
+              data-testid="games-clear-filters-button"
+            >
+              <X className="h-3 w-3" />
+              <span>Clear</span>
+            </button>
           ) : null}
         </div>
       </section>

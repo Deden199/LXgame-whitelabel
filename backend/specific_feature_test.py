@@ -5,7 +5,7 @@ import json
 from datetime import datetime
 
 class SpecificFeatureTester:
-    def __init__(self, base_url="https://loox-active-games.preview.emergentagent.com"):
+    def __init__(self, base_url="https://games-polish-mobile.preview.emergentagent.com"):
         self.base_url = base_url
         self.session = requests.Session()
         self.auth_tokens = {}

@@ -6,7 +6,7 @@ from datetime import datetime
 from typing import Dict, Any, Optional
 
 class GamingPlatformTester:
-    def __init__(self, base_url="https://seamless-game-source.preview.emergentagent.com"):
+    def __init__(self, base_url="https://games-polish-mobile.preview.emergentagent.com"):
         self.base_url = base_url
         self.session = requests.Session()
         self.tests_run = 0
