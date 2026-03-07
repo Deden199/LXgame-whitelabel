@@ -71,7 +71,7 @@ class SeamlessMoneyCallbackRequest(BaseModel):
 
 
 class SeamlessCallbackHandler:
-    def __init__(self, db, tenant_id: str, agent_code: str, agent_secret: str, currency: str = "PHP"):
+    def __init__(self, db, tenant_id: str, agent_code: str, agent_secret: str, currency: str = "IDR"):
         self.db = db
         self.tenant_id = tenant_id
         self.agent_code = agent_code

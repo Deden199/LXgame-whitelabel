@@ -23,7 +23,7 @@ def _env_or_fallback(*values: str | None) -> str | None:
     return None
 
 
-def _seamless_config(agent_code: str, default_currency: str = "PHP") -> dict:
+def _seamless_config(agent_code: str, default_currency: str = "IDR") -> dict:
     resolved_agent_code = _env_or_fallback(
         os.environ.get(f"SEAMLESS_AGENT_CODE_{agent_code.upper()}"),
         os.environ.get("SEAMLESS_AGENT_CODE"),

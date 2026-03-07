@@ -195,7 +195,6 @@
     @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent;
   }
   
-  /* Hide scrollbar but keep functionality */
   .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;
@@ -223,10 +222,6 @@
     border-radius: 2px;
   }
   
-  /* ============================================
-   * GAME CARD - PREMIUM FEEL (BC.game style)
-   * Soft rounded corners, layered shadows, smooth hover
-   * ============================================ */
   .game-card {
     @apply relative overflow-hidden bg-card;
     border-radius: 14px;
@@ -236,7 +231,6 @@
       hsl(var(--card)) 0%,
       hsl(var(--card) / 0.95) 100%
     );
-    /* Layered shadow for depth */
     box-shadow: 
       0 2px 4px -1px hsl(var(--background) / 0.3),
       0 4px 8px -2px hsl(var(--background) / 0.2),
@@ -247,7 +241,6 @@
       border-color 200ms cubic-bezier(0.4, 0, 0.2, 1);
   }
 
-  /* TASK 4 - Desktop game card premium polish */
   @media (min-width: 1024px) {
     .game-card {
       border-radius: 14px;
@@ -318,118 +311,109 @@
       0 12px 28px -6px hsl(var(--background) / 0.4),
       inset 0 1px 0 hsl(var(--primary) / 0.1);
   }
-  
+
   .game-card:active {
-    transform: translateY(-1px) scale(0.99);
+    transform: translateY(-1px) scale(0.995);
   }
-  
+
+  .game-card .game-card-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    background: radial-gradient(circle at center, rgba(0, 0, 0, 0.15) 0%, rgba(0, 0, 0, 0.58) 100%);
+    transition: opacity 200ms cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 2;
+  }
+
   .game-card:hover .game-card-overlay {
     opacity: 1;
   }
-  
-  /* Ensure thumbnail clips to card radius */
-  .game-card img {
-    border-radius: 14px 14px 0 0;
-  }
-  
-  .game-card-overlay {
-    @apply absolute inset-0 flex items-center justify-center opacity-0 pointer-events-none;
-    background: linear-gradient(
-      to top,
-      hsl(var(--background) / 0.85) 0%,
-      hsl(var(--background) / 0.5) 40%,
-      transparent 70%
-    );
-    transition: opacity 180ms cubic-bezier(0.4, 0, 0.2, 1);
-    border-radius: 14px;
-  }
-  
-  /* Premium badge positioning - inset from edges */
-  .game-card .game-badge {
-    position: absolute;
-    top: 6px;
-    right: 6px;
-    padding: 2px 6px;
-    font-size: 9px;
-    font-weight: 700;
-    border-radius: 6px;
-    text-transform: uppercase;
-    letter-spacing: 0.3px;
-    box-shadow: 0 2px 6px -2px hsl(var(--background) / 0.5);
-  }
-  
-  /* Smoother gradient overlay on thumbnail */
-  .game-card .game-thumbnail-overlay {
-    position: absolute;
+
+  .noise-overlay {
+    position: fixed;
     inset: 0;
-    background: linear-gradient(
-      to top,
-      hsl(var(--background) / 0.75) 0%,
-      hsl(var(--background) / 0.3) 35%,
-      transparent 60%
-    );
     pointer-events: none;
-    border-radius: 14px 14px 0 0;
+    opacity: 0.02;
+    background-image:
+      radial-gradient(circle at 20% 50%, white 0.5px, transparent 0.5px),
+      radial-gradient(circle at 80% 50%, white 0.5px, transparent 0.5px),
+      radial-gradient(circle at 40% 80%, white 0.5px, transparent 0.5px);
+    background-size: 30px 30px;
+    z-index: 1;
   }
-  
-  /* Compact spacing utilities */
-  .section-compact {
-    @apply py-3;
+
+  .scroll-container {
+    @apply flex gap-2 overflow-x-auto pb-2 scrollbar-hide relative;
+    -webkit-overflow-scrolling: touch;
   }
-  
-  .section-title {
-    @apply text-sm font-semibold text-foreground mb-2;
+
+  .scroll-container > * {
+    @apply flex-shrink-0;
+  }
+
+  .games-grid {
+    display: grid;
+    gap: 16px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  @media (min-width: 640px) {
+    .games-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .games-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+
+  @media (min-width: 1280px) {
+    .games-grid {
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+    }
+  }
+
+  .player-content-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  @media (min-width: 1024px) {
+    .player-content-container {
+      padding-inline: 8px;
+    }
+  }
+
+  .game-card-animate {
+    animation: card-in 360ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  @keyframes card-in {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 }
 
-/* Noise overlay - subtle */
-.noise-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 50;
-  pointer-events: none;
-  opacity: 0.02;
-  mix-blend-mode: overlay;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
-}
-
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-
-::-webkit-scrollbar-track {
-  background: hsl(var(--background));
-}
-
-::-webkit-scrollbar-thumb {
-  background: hsl(var(--muted));
-  border-radius: 3px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: hsl(var(--muted-foreground));
-}
-
-/* Focus visible */
-*:focus-visible {
-  outline: 1px solid hsl(var(--ring));
-  outline-offset: 1px;
-}
-
-/* Selection */
 ::selection {
   background: hsl(var(--primary) / 0.3);
   color: hsl(var(--foreground));
 }
 
-/* ============================================
- * BOTTOM NAVIGATION - PREMIUM POLISH
- * Smooth transitions, subtle glow on active
- * ============================================ */
 .bottom-nav {
-  @apply fixed bottom-0 left-0 right-0 z-40;
+  @apply fixed bottom-0 left-0 right-0 z-50;
   background: linear-gradient(
     to top,
     hsl(var(--card)) 0%,
@@ -437,7 +421,8 @@
   );
   backdrop-filter: blur(12px);
   border-top: 1px solid hsl(var(--border) / 0.5);
-  padding-bottom: env(safe-area-inset-bottom);
+  padding-bottom: max(8px, env(safe-area-inset-bottom));
+  min-height: 68px;
   box-shadow: 0 -4px 20px -4px hsl(var(--background) / 0.5);
 }
 
@@ -458,7 +443,6 @@
   color: hsl(var(--primary));
 }
 
-/* Active indicator glow */
 .bottom-nav-item.active::before {
   content: '';
   position: absolute;
@@ -472,7 +456,6 @@
   box-shadow: 0 2px 8px -1px hsl(var(--primary) / 0.5);
 }
 
-/* Subtle background on active */
 .bottom-nav-item.active::after {
   content: '';
   position: absolute;
@@ -508,331 +491,16 @@
 
 .mobile-admin-nav-item {
   @apply flex flex-col items-center justify-center gap-0.5 py-2 px-2 rounded-md;
-  min-width: 64px;
   font-size: 10px;
+  min-width: 56px;
   color: hsl(var(--muted-foreground));
 }
 
 .mobile-admin-nav-item.active {
   color: hsl(var(--primary));
-  background: hsl(var(--primary) / 0.1);
+  background: hsl(var(--primary) / 0.08);
 }
 
-/* Sidebar compact styles */
-.sidebar-compact {
-  width: var(--sidebar-collapsed);
-}
-
-.sidebar-compact .sidebar-label {
-  display: none;
-}
-
-.sidebar-expanded {
-  width: var(--sidebar-width);
-}
-
-/* Main content offset */
-.main-content {
-  padding-bottom: 60px; /* Space for bottom nav on mobile */
-}
-
-@media (min-width: 1024px) {
-  .main-content {
-    padding-bottom: 0;
-    margin-left: var(--sidebar-collapsed);
-  }
-  
-  .main-content.sidebar-open {
-    margin-left: var(--sidebar-width);
-  }
-}
-
-/* ============================================
- * HORIZONTAL SCROLL - SMOOTH & PREMIUM
- * Refined scroll-snap, fade masks on edges
- * ============================================ */
-.scroll-container {
-  @apply flex gap-2 overflow-x-auto pb-2 scrollbar-hide relative;
-  scroll-snap-type: x proximity;
-  scroll-behavior: smooth;
-  -webkit-overflow-scrolling: touch;
-  scroll-padding: 0 8px;
-}
-
-.scroll-container > * {
-  scroll-snap-align: start;
-  flex-shrink: 0;
-}
-
-/* Fade mask wrapper - apply to parent if needed */
-.scroll-fade-mask {
-  position: relative;
-}
-
-.scroll-fade-mask::before,
-.scroll-fade-mask::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  bottom: 8px;
-  width: 24px;
-  pointer-events: none;
-  z-index: 10;
-}
-
-.scroll-fade-mask::before {
-  left: 0;
-  background: linear-gradient(to right, hsl(var(--background)), transparent);
-}
-
-.scroll-fade-mask::after {
-  right: 0;
-  background: linear-gradient(to left, hsl(var(--background)), transparent);
-}
-
-/* Grid layouts - dense but readable */
-.games-grid {
-  display: grid;
-  gap: 8px;
-  grid-template-columns: repeat(3, 1fr); /* 3 columns on smallest mobile for readability */
-}
-
-@media (min-width: 400px) {
-  .games-grid {
-    grid-template-columns: repeat(4, 1fr); /* 4 columns from 400px+ */
-  }
-}
-
-@media (min-width: 520px) {
-  .games-grid {
-    gap: 10px;
-    grid-template-columns: repeat(4, 1fr);
-  }
-}
-
-@media (min-width: 640px) {
-  .games-grid {
-    gap: 12px;
-    grid-template-columns: repeat(4, 1fr);
-  }
-}
-
-@media (min-width: 768px) {
-  .games-grid {
-    gap: 14px;
-    grid-template-columns: repeat(4, 1fr);
-  }
-}
-
-/* Desktop-first premium layout - TASK 1 */
-@media (min-width: 1024px) {
-  .games-grid {
-    gap: 20px;
-    grid-template-columns: repeat(4, 1fr);
-  }
-}
-
-@media (min-width: 1280px) {
-  .games-grid {
-    gap: 22px;
-    grid-template-columns: repeat(5, 1fr);
-  }
-}
-
-@media (min-width: 1440px) {
-  .games-grid {
-    gap: 24px;
-    grid-template-columns: repeat(6, 1fr);
-  }
-}
-
-@media (min-width: 1680px) {
-  .games-grid {
-    gap: 24px;
-    grid-template-columns: repeat(6, 1fr); /* Keep 6 for premium feel */
-  }
-}
-
-/* TASK 6 - Max content width constraint for premium desktop */
-.player-content-container {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 0 16px;
-}
-
-@media (min-width: 1024px) {
-  .player-content-container {
-    padding: 0 24px;
-  }
-}
-
-/* TASK 5 - Section spacing hierarchy desktop */
-@media (min-width: 1024px) {
-  .section-compact {
-    @apply py-4;
-    margin-top: 32px;
-  }
-  
-  .section-compact:first-child {
-    margin-top: 0;
-  }
-  
-  .section-title-desktop {
-    font-size: 18px;
-    font-weight: 600;
-    margin-bottom: 16px;
-  }
-}
-
-@media (min-width: 1280px) {
-  .section-compact {
-    margin-top: 40px;
-  }
-}
-
-@media (min-width: 1440px) {
-  .section-compact {
-    margin-top: 48px;
-  }
-}
-
-/* Compact empty state */
-.empty-state-compact {
-  @apply flex flex-col items-center justify-center text-center py-4;
-  max-height: 100px;
-}
-
-.empty-state-compact svg {
-  @apply w-6 h-6 text-muted-foreground/30 mb-1;
-}
-
-.empty-state-compact p {
-  @apply text-[10px] text-muted-foreground;
-}
-
-/* Debug wrapper */
-@layer base {
-  [data-debug-wrapper="true"] {
-    display: contents !important;
-  }
-}
-
-/* ============================================
- * MICRO MOTION & BUTTON POLISH
- * Natural easing, press states, premium feel
- * ============================================ */
-
-/* Premium button transitions */
-button, 
-[role="button"],
-.btn {
-  transition: 
-    background-color 180ms cubic-bezier(0.4, 0, 0.2, 1),
-    border-color 180ms cubic-bezier(0.4, 0, 0.2, 1),
-    color 180ms cubic-bezier(0.4, 0, 0.2, 1),
-    transform 150ms cubic-bezier(0.4, 0, 0.2, 1),
-    box-shadow 180ms cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-button:active:not(:disabled),
-[role="button"]:active:not(:disabled) {
-  transform: scale(0.98);
-}
-
-/* Subtle hover scale for interactive elements */
-.hover-lift {
-  transition: transform 180ms cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.hover-lift:hover {
-  transform: translateY(-2px);
-}
-
-/* Premium input focus */
-input:focus,
-textarea:focus,
-select:focus {
-  outline: none;
-  border-color: hsl(var(--primary) / 0.5);
-  box-shadow: 0 0 0 3px hsl(var(--primary) / 0.1);
-}
-
-/* Skeleton loading animation - smoother */
-@keyframes skeleton-pulse {
-  0%, 100% {
-    opacity: 0.4;
-  }
-  50% {
-    opacity: 0.7;
-  }
-}
-
-.animate-pulse {
-  animation: skeleton-pulse 1.8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-/* Card hover subtle lift */
-.card-interactive {
-  transition: 
-    transform 200ms cubic-bezier(0.4, 0, 0.2, 1),
-    box-shadow 200ms cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.card-interactive:hover {
-  transform: translateY(-2px);
-  box-shadow: 
-    0 4px 12px -2px hsl(var(--background) / 0.3),
-    0 8px 20px -4px hsl(var(--primary) / 0.1);
-}
-
-/* ============================================
- * GAME CARD ENTRANCE ANIMATION
- * Subtle fade + slide, staggered, performance-safe
- * ============================================ */
-@keyframes card-enter {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.game-card-animate {
-  animation: card-enter 220ms cubic-bezier(0.25, 0.1, 0.25, 1) both;
-}
-
-/* Stagger delays - applied via inline style for dynamic control */
-.game-card-animate[data-index="0"] { animation-delay: 0ms; }
-.game-card-animate[data-index="1"] { animation-delay: 25ms; }
-.game-card-animate[data-index="2"] { animation-delay: 50ms; }
-.game-card-animate[data-index="3"] { animation-delay: 75ms; }
-.game-card-animate[data-index="4"] { animation-delay: 100ms; }
-.game-card-animate[data-index="5"] { animation-delay: 125ms; }
-.game-card-animate[data-index="6"] { animation-delay: 150ms; }
-.game-card-animate[data-index="7"] { animation-delay: 175ms; }
-.game-card-animate[data-index="8"] { animation-delay: 200ms; }
-.game-card-animate[data-index="9"] { animation-delay: 225ms; }
-.game-card-animate[data-index="10"] { animation-delay: 250ms; }
-.game-card-animate[data-index="11"] { animation-delay: 275ms; }
-
-/* Cap delay for cards beyond index 11 */
-.game-card-animate[data-index] {
-  --max-delay: 300ms;
-}
-
-/* Respect reduced motion preference */
-@media (prefers-reduced-motion: reduce) {
-  .game-card-animate {
-    animation: none;
-    opacity: 1;
-    transform: none;
-  }
-}
-
-/* Image fallback placeholder styling */
 .img-placeholder {
   background: linear-gradient(
     135deg,
@@ -850,43 +518,38 @@ select:focus {
   opacity: 0.3;
 }
 
-
 .desktop-sticky-filter {
-  position: sticky;
-  top: 3rem;
-  z-index: 20;
-  background: hsl(var(--background) / 0.82);
-  backdrop-filter: blur(8px);
+  position: relative;
+  top: 0;
+  z-index: 5;
+  background: hsl(var(--background) / 0.88);
+  backdrop-filter: blur(10px);
   border: 1px solid hsl(var(--border) / 0.45);
-  border-radius: 12px;
-  padding: 8px;
-  margin-bottom: 4px;
+  border-radius: 16px;
+  padding: 10px;
+  margin-bottom: 10px;
 }
 
-/* Desktop: sticky below taller header */
 @media (min-width: 1024px) {
   .desktop-sticky-filter {
-    top: calc(76px + 0.5rem); /* Match header height */
-    padding: 12px;
-    border-radius: 16px;
+    position: relative;
+    top: 0;
+    padding: 14px;
+    border-radius: 18px;
+    margin-bottom: 18px;
   }
 }
 
 @media (max-width: 1023px) {
   .desktop-sticky-filter {
-    position: static;
     background: transparent;
     border: 0;
-    padding: 0;
+    padding: 0 0 8px;
     backdrop-filter: none;
+    margin-bottom: 12px;
   }
 }
 
-.scroll-row-wrapper {
-  position: relative;
-}
-
-/* TASK A1 - Carousel Container Styles */
 .carousel-row-wrapper {
   position: relative;
 }
@@ -907,7 +570,6 @@ select:focus {
   display: none;
 }
 
-/* Desktop carousel - larger cards, tighter layout */
 @media (min-width: 1024px) {
   .carousel-container-desktop {
     gap: 16px;
@@ -915,7 +577,6 @@ select:focus {
   }
 }
 
-/* Carousel card variant - taller for desktop */
 .game-card-carousel {
   border-radius: 16px;
 }
@@ -927,7 +588,6 @@ select:focus {
     0 8px 16px -4px rgba(0,0,0,0.3);
 }
 
-/* Carousel section spacing */
 .carousel-section {
   margin-bottom: 20px;
 }
@@ -935,36 +595,6 @@ select:focus {
 @media (min-width: 1024px) {
   .carousel-section {
     margin-bottom: 32px;
-  }
-}
-
-.scroll-row-wrapper::before,
-.scroll-row-wrapper::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  bottom: 8px;
-  width: 24px;
-  z-index: 2;
-  pointer-events: none;
-  opacity: 0.82;
-  transition: opacity 200ms ease;
-}
-
-.scroll-row-wrapper::before {
-  left: 0;
-  background: linear-gradient(to right, hsl(var(--background)), transparent);
-}
-
-.scroll-row-wrapper::after {
-  right: 0;
-  background: linear-gradient(to left, hsl(var(--background)), transparent);
-}
-
-@media (min-width: 1024px) {
-  .scroll-row-wrapper:hover::before,
-  .scroll-row-wrapper:hover::after {
-    opacity: 1;
   }
 }
 
@@ -978,26 +608,18 @@ select:focus {
   border: 1px solid hsl(var(--border));
   background: hsl(var(--card) / 0.9);
   backdrop-filter: blur(6px);
-  display: none;
+  box-shadow: 0 4px 12px -2px rgba(0,0,0,0.3);
+  display: flex;
   align-items: center;
   justify-content: center;
-  color: hsl(var(--foreground));
-  z-index: 3;
+  z-index: 10;
 }
 
-.row-arrow-left { left: 4px; }
-.row-arrow-right { right: 4px; }
-
-@media (min-width: 1024px) {
-  .scroll-row-wrapper:hover .row-arrow { display: inline-flex; }
-}
-
-.desktop-snap {
-  scroll-snap-type: x mandatory;
-}
+.row-arrow-left { left: 8px; }
+.row-arrow-right { right: 8px; }
 
 .game-card-image {
-  transition: transform 220ms ease, filter 220ms ease;
+  transition: transform 280ms ease, filter 220ms ease;
 }
 
 .game-card:hover .game-card-image {
@@ -1005,52 +627,13 @@ select:focus {
   filter: brightness(1.08);
 }
 
-.game-card-thumbnail-overlay {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  border-radius: 14px 14px 0 0;
-  background: linear-gradient(to top, hsl(var(--background) / 0.72) 0%, transparent 62%);
+.hero-banner-section {
+  position: relative;
+  z-index: 0;
 }
 
-.section-enter {
-  animation: section-enter 220ms ease both;
-}
-
-@keyframes section-enter {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.promo-ticker {
+.hero-banner-card {
   overflow: hidden;
-  border: 1px solid hsl(var(--border) / 0.4);
-  border-radius: 9999px;
-  background: hsl(var(--card) / 0.75);
-  padding: 6px 0;
-}
-
-.promo-ticker-track {
-  display: flex;
-  width: max-content;
-  gap: 1.25rem;
-  padding-left: 1rem;
-  animation: promo-ticker-marquee 24s linear infinite;
-}
-
-.promo-ticker:hover .promo-ticker-track {
-  animation-play-state: paused;
-}
-
-.promo-ticker-item {
-  font-size: 11px;
-  color: hsl(var(--muted-foreground));
-  white-space: nowrap;
-}
-
-@keyframes promo-ticker-marquee {
-  from { transform: translateX(0); }
-  to { transform: translateX(-50%); }
 }
 
 .spotlight-slider {
@@ -1121,11 +704,6 @@ select:focus {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .promo-ticker-track {
-    animation: none;
-    transform: translateX(0);
-  }
-
   .spotlight-track,
   .section-enter,
   .game-card-animate {
